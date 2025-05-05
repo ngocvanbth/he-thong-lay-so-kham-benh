@@ -1,0 +1,19 @@
+{
+  "users": [
+    {
+      "id": "admin",
+      "password": "admin",
+      "role": "admin"
+    },
+    {
+      "id": "phatso",
+      "password": "123456",
+      "role": "nhanvien"
+    },
+    {
+      "id": "phongkham",
+      "password": "123456",
+      "role": "phongkham"
+    }
+  ]
+}

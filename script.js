@@ -1,0 +1,430 @@
+// ====== script.js ======
+
+// Gắn cứng danh sách users
+const users = [
+    { id: "admin", password: "admin", role: "admin" },
+    { id: "phatso", password: "123456", role: "phatso" },
+    { id: "phongkham", password: "123456", role: "phongkham" }
+];
+
+// Clinics mặc định
+let clinics = [
+    { name: "Phòng khám Đông Y 1", limit: 20, issued: 0 },
+    { name: "Phòng khám Đông Y 2", limit: 20, issued: 0 },
+    { name: "Phòng khám Nội 1", limit: 20, issued: 0 },
+    { name: "Phòng khám Nội 2", limit: 20, issued: 0 },
+    { name: "Phòng khám Nội 3", limit: 20, issued: 0 },
+    { name: "Phòng khám Nội 4", limit: 20, issued: 0 },
+    { name: "Phòng khám Nội 5", limit: 20, issued: 0 },
+    { name: "Phòng khám Nhi 1", limit: 20, issued: 0 },
+    { name: "Phòng khám Nhi 2", limit: 20, issued: 0 },
+    { name: "Phòng khám Tai Mũi Họng", limit: 20, issued: 0 },
+    { name: "Phòng khám Mắt", limit: 20, issued: 0 },
+    { name: "Phòng khám Sản khoa", limit: 20, issued: 0 },
+    { name: "Phòng khám Ngoại Tổng hợp", limit: 20, issued: 0 }
+];
+
+let selectedClinic = "";
+let calledNumbers = {}; // Phatso cấp số
+let calledHistory = {}; // Phongkham đã gọi
+
+function saveClinics() {
+    localStorage.setItem("clinics", JSON.stringify(clinics));
+}
+
+function loadClinics() {
+    const data = localStorage.getItem("clinics");
+    if (data) clinics = JSON.parse(data);
+    else saveClinics();
+}
+
+function saveCalledNumbers() {
+    localStorage.setItem("calledNumbers", JSON.stringify(calledNumbers));
+}
+
+function loadCalledNumbers() {
+    const data = localStorage.getItem("calledNumbers");
+    if (data) calledNumbers = JSON.parse(data);
+    clinics.forEach(c => {
+        if (!Array.isArray(calledNumbers[c.name])) calledNumbers[c.name] = [];
+    });
+    saveCalledNumbers();
+}
+
+function saveCalledHistory() {
+    localStorage.setItem("calledHistory", JSON.stringify(calledHistory));
+}
+
+function loadCalledHistory() {
+    const data = localStorage.getItem("calledHistory");
+    if (data) calledHistory = JSON.parse(data);
+    clinics.forEach(c => {
+        if (!Array.isArray(calledHistory[c.name])) calledHistory[c.name] = [];
+    });
+    saveCalledHistory();
+}
+
+function login() {
+    const id = document.getElementById("username").value.trim();
+    const pw = document.getElementById("password").value.trim();
+    const user = users.find(u => u.id === id && u.password === pw);
+    if (user) {
+        localStorage.setItem("currentUser", JSON.stringify(user));
+        location.reload();
+    } else {
+        alert("Sai ID hoặc mật khẩu!");
+    }
+}
+
+function logout() {
+    localStorage.removeItem("currentUser");
+    location.reload();
+}
+
+function showDashboard(user) {
+    document.getElementById("login-container").style.display = "none";
+    if (user.role === "admin") {
+        document.getElementById("admin-container").style.display = "block";
+        renderAdmin();
+    } else if (user.role === "phatso") {
+        document.getElementById("phatso-container").style.display = "block";
+        renderPhatSo();
+    } else if (user.role === "phongkham") {
+        const savedClinic = localStorage.getItem("selectedClinic");
+if (savedClinic) {
+    selectedClinic = savedClinic;
+    document.getElementById("clinic-name-display").innerText = selectedClinic;
+    document.getElementById("clinic-name-display").style.display = "block";
+    document.getElementById("clinic-select-container").style.display = "none";
+    document.getElementById("phongkham-action").style.display = "block";
+    document.getElementById("main-heading").innerText = "GỌI BỆNH NHÂN VÀO PHÒNG KHÁM!";
+    document.getElementById("top-right-buttons").style.display = "block";
+    updateCalledList();
+} else {
+    showClinicSelect();
+}
+        document.getElementById("phongkham-container").style.display = "block";
+        showClinicSelect();
+    }
+}
+
+function renderAdmin() {
+    const tbody = document.querySelector("#admin-clinic-list tbody");
+    tbody.innerHTML = "";
+
+    clinics.forEach((clinic, idx) => {
+        const row = document.createElement("tr");
+
+        // Tạo input sửa tên
+        const inputName = document.createElement("input");
+        inputName.type = "text";
+        inputName.value = clinic.name;
+        inputName.setAttribute("data-index", idx);
+        inputName.className = "admin-input-text clinic-name-input";
+
+        // Tạo input giới hạn
+        const inputLimit = document.createElement("input");
+        inputLimit.type = "number";
+        inputLimit.value = clinic.limit;
+        inputLimit.min = 1;
+        inputLimit.setAttribute("data-index", idx);
+        inputLimit.className = "admin-input-number limit-input";
+
+        row.innerHTML = `
+            <td><button onclick="deleteClinic(${idx})" class="icon-btn">❌</button></td>
+            <td></td>
+            <td></td>
+            <td>${clinic.issued}</td>
+        `;
+
+        row.children[1].appendChild(inputName);
+        row.children[2].appendChild(inputLimit);
+
+        tbody.appendChild(row);
+    });
+}
+
+function deleteClinic(index) {
+    if (confirm("Bạn có chắc chắn muốn xóa phòng khám này không?")) {
+        clinics.splice(index, 1);
+        saveClinics();
+        renderAdmin();
+    }
+}
+
+function addClinic() {
+    const name = document.getElementById("new-clinic-name").value.trim();
+    const limit = parseInt(document.getElementById("new-clinic-limit").value);
+
+    if (!name || isNaN(limit) || limit <= 0) {
+        alert("Vui lòng nhập tên và giới hạn hợp lệ!");
+        return;
+    }
+
+    // Kiểm tra trùng tên
+    if (clinics.some(c => c.name === name)) {
+        alert("Tên phòng khám đã tồn tại!");
+        return;
+    }
+
+    clinics.push({ name, limit, issued: 0 });
+    calledNumbers[name] = [];
+    calledHistory[name] = [];
+
+    saveClinics();
+    saveCalledNumbers();
+    saveCalledHistory();
+
+    // Xoá nội dung input
+    document.getElementById("new-clinic-name").value = "";
+    document.getElementById("new-clinic-limit").value = "";
+
+    renderAdmin();
+}
+
+function saveChanges() {
+    const limitInputs = document.querySelectorAll(".limit-input");
+    const nameInputs = document.querySelectorAll(".clinic-name-input");
+
+    limitInputs.forEach((input, idx) => {
+        const index = input.getAttribute("data-index");
+        const newLimit = parseInt(input.value) || 1;
+        const newName = nameInputs[idx].value.trim();
+
+        if (newName !== clinics[index].name) {
+            // Nếu tên thay đổi, cần cập nhật dữ liệu liên quan
+            const oldName = clinics[index].name;
+
+            // Di chuyển dữ liệu gọi số theo tên cũ sang tên mới
+            if (calledNumbers[oldName]) {
+                calledNumbers[newName] = [...calledNumbers[oldName]];
+                delete calledNumbers[oldName];
+            }
+            if (calledHistory[oldName]) {
+                calledHistory[newName] = [...calledHistory[oldName]];
+                delete calledHistory[oldName];
+            }
+        }
+
+        clinics[index].name = newName;
+        clinics[index].limit = newLimit;
+    });
+
+    saveClinics();
+    saveCalledNumbers();
+    saveCalledHistory();
+    alert("Đã lưu thay đổi!");
+    renderAdmin();
+}
+
+function resetIssued() {
+    if (confirm("Bạn có chắc chắn muốn reset toàn bộ?")) {
+        clinics.forEach(c => {
+            c.limit = 100;
+            c.issued = 0;
+            calledNumbers[c.name] = [];
+            calledHistory[c.name] = [];
+        });
+        saveClinics();
+        saveCalledNumbers();
+        saveCalledHistory();
+        alert("Đã reset thành công!");
+        renderAdmin();
+    }
+}
+
+function renderPhatSo() {
+    loadCalledNumbers();
+    const table = document.getElementById("phatso-list");
+    table.innerHTML = "";
+    clinics.forEach(clinic => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${clinic.name}</td>
+            <td>${clinic.issued}</td>
+            <td>${clinic.limit - clinic.issued}</td>
+            <td><button onclick="issueNumber('${clinic.name}')">Cấp số</button></td>
+        `;
+        table.appendChild(row);
+    });
+}
+
+function issueNumber(name) {
+    loadCalledNumbers();
+    const clinic = clinics.find(c => c.name === name);
+    if (!clinic || clinic.issued >= clinic.limit) {
+        alert("Hết số hoặc phòng khám không hợp lệ!");
+        return;
+    }
+    clinic.issued++;
+    if (!calledNumbers[clinic.name]) calledNumbers[clinic.name] = [];
+    calledNumbers[clinic.name].push(clinic.issued);
+    saveClinics();
+    saveCalledNumbers();
+    renderPhatSo();
+    handlePrint(clinic.name, clinic.issued);
+}
+
+function handlePrint(clinicName, number) {
+    const now = new Date();
+    document.getElementById("clinicNamePrint").innerText = clinicName;
+    document.getElementById("ticketNumberPrint").innerText = number.toString().padStart(2, "0");
+    document.getElementById("timePrint").innerText = now.toLocaleString("vi-VN");
+    const printArea = document.getElementById("print-area");
+    printArea.style.display = "block";
+    setTimeout(() => {
+        window.print();
+        printArea.style.display = "none";
+    }, 300);
+}
+
+async function callNextNumbers(count) {
+    const clinicName = selectedClinic;
+    const clinic = clinics.find(c => c.name === clinicName);
+    if (!clinic) {
+        alert("Phòng khám không tồn tại!");
+        return;
+    }
+
+    const queue = [...calledNumbers[clinicName] || []];
+    const history = new Set(JSON.parse(localStorage.getItem("calledHistory") || "{}")[clinicName] || []);
+    const toCall = queue.filter(n => !history.has(n));
+    if (toCall.length === 0) {
+        alert("Không có số mới để gọi!");
+        return;
+    }
+
+    // ✅ Tên file KHÔNG dấu, chỉ thay khoảng trắng bằng gạch ngang
+    const slug = clinicName.toLowerCase().replace(/\s+/g, "-");
+
+    for (let i = 0; i < count && i < toCall.length; i++) {
+        const number = toCall[i];
+        const files = [
+            "audio/moi-so.mp3",
+            `audio/so-${number}.mp3`,
+            `audio/${slug}.mp3`
+        ];
+        await playAudioSequenceAsync(files);
+        history.add(number);
+            }
+
+    const fullHistory = JSON.parse(localStorage.getItem("calledHistory") || "{}");
+    fullHistory[clinicName] = Array.from(history);
+    localStorage.setItem("calledHistory", JSON.stringify(fullHistory));
+
+    loadCalledHistory();     // ⬅ để cập nhật biến `calledHistory` toàn cục
+    updateCalledList();      // ⬅ để giao diện render lại
+    }
+
+function showClinicSelect() {
+    const select = document.getElementById("clinic-select");
+    select.innerHTML = clinics.map(c => `<option value="${c.name}">${c.name}</option>`).join("");
+}
+
+function confirmClinic() {
+    selectedClinic = document.getElementById("clinic-select").value;
+    document.getElementById("clinic-name-display").innerText = selectedClinic;
+    document.getElementById("clinic-name-display").style.display = "block";
+    
+    // Ẩn phần chọn phòng khám
+    document.getElementById("clinic-select-container").style.display = "none";
+
+    // Hiện khối chức năng chính
+    document.getElementById("phongkham-action").style.display = "block";
+
+    // Ẩn thống kê & danh sách gọi số lúc đầu (chỉ hiện sau khi gọi)
+    document.getElementById("phongkham-stats").style.display = "none";
+    document.getElementById("called-section").style.display = "none";
+
+    updateCalledList();
+    document.getElementById("top-right-buttons").style.display = "block";
+    document.getElementById("main-heading").innerText = "GỌI BỆNH NHÂN VÀO PHÒNG KHÁM!";
+    localStorage.setItem("selectedClinic", selectedClinic);
+}
+
+
+async function playAudioSequenceAsync(files) {
+    for (let i = 0; i < files.length; i++) {
+        await new Promise(resolve => {
+            const audio = new Audio(files[i]);
+            audio.onloadedmetadata = () => {
+                const duration = audio.duration;
+                const nextStartTime = (duration - 0.1) * 800;
+                setTimeout(resolve, nextStartTime);
+                audio.play();
+            };
+            audio.onerror = resolve;
+        });
+    }
+}
+
+function updateCalledList() {
+    const container = document.getElementById("called-list");
+    const section = document.getElementById("called-section");
+    const statsBox = document.getElementById("phongkham-stats");
+  
+    const fullHistory = calledHistory[selectedClinic] || [];
+    const lastCalled = fullHistory.length > 0 ? Math.max(...fullHistory) : "-";
+  
+    if (fullHistory.length === 0) {
+      section.style.display = "none";
+      statsBox.style.display = "none";
+      return;
+    }
+  
+    section.style.display = "block";
+    statsBox.style.display = "flex";
+  
+    // Chỉ hiện các số đã gọi
+    container.innerHTML = fullHistory.map(n =>
+      `<button onclick="recallNumber(${n})">Số ${n}</button>`
+    ).join("");
+  
+    const clinic = clinics.find(c => c.name === selectedClinic);
+    const totalIssued = clinic ? clinic.issued : 0;
+    const remaining = clinic ? (clinic.issued - fullHistory.length) : 0;
+  
+    document.getElementById("total-issued").innerText = totalIssued;
+    document.getElementById("remaining").innerText = remaining;
+    document.getElementById("last-called").innerText = lastCalled;
+  }
+  
+
+window.onload = function () {
+    loadClinics();
+    loadCalledNumbers();
+    loadCalledHistory();
+    const user = JSON.parse(localStorage.getItem("currentUser"));
+    if (user) showDashboard(user);
+};
+
+
+function recallNumber(number) {
+  const slug = selectedClinic.toLowerCase().replace(/\s+/g, "-");
+  const files = [
+    "audio/moi-so.mp3",
+    `audio/so-${number}.mp3`,
+    `audio/${slug}.mp3`
+  ];
+  playAudioSequenceAsync(files);
+}
+
+function switchClinic() {
+    // Ẩn giao diện gọi bệnh nhân
+    document.getElementById("phongkham-action").style.display = "none";
+  
+    // Hiện lại khối chọn phòng
+    document.getElementById("clinic-select-container").style.display = "block";
+  
+    // Ẩn nút Đổi phòng khám + Đăng xuất
+    document.getElementById("top-right-buttons").style.display = "none";
+  
+    // Đổi lại tiêu đề
+    document.getElementById("main-heading").innerText = "VUI LÒNG THIẾT LẬP PHÒNG KHÁM!";
+  
+    // Ẩn tên phòng khám ở tiêu đề
+    document.getElementById("clinic-name-display").style.display = "none";
+  
+    // Xoá lựa chọn phòng khám đã lưu
+    localStorage.removeItem("selectedClinic");
+  }

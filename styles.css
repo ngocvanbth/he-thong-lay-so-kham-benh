@@ -1,0 +1,425 @@
+/* Toàn bộ giao diện */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #e3f2fd;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  width: 90%;
+  max-width: 800px;
+  margin: 40px auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+/* Bảng danh sách */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 15px;
+}
+
+th, td {
+  padding: 4px 8px; /* giảm padding top/bottom */
+  border-bottom: 1px solid #ccc;
+  text-align: center;
+  vertical-align: middle; /* căn giữa theo chiều dọc */
+}
+
+th {
+  background-color: #007bff;
+  color: white;
+}
+
+td:nth-child(3) {
+  font-weight: bold;
+  color: #28a745;
+}
+
+/* Nút */
+button {
+  padding: 8px 14px;
+  font-size: 14px;
+  margin: 3px;
+  border: none;
+  border-radius: 6px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.logout-btn {
+  float: right;
+  background-color: #dc3545;
+}
+
+.logout-btn:hover {
+  background-color: #c82333;
+}
+
+/* Popup cấp số */
+.popup {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.popup-content {
+  background: white;
+  padding: 30px 50px;
+  border-radius: 10px;
+  text-align: center;
+  max-width: 400px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.bold-number {
+  font-size: 36px;
+  font-weight: bold;
+  color: #007bff;
+}
+
+/* Khu vực in vé */
+#print-area {
+  display: none !important;
+}
+
+/* Watermark logo mặt trước */
+.watermark-front {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60%;
+  transform: translate(-50%, -50%);
+  opacity: 0.1;
+  z-index: 1;
+}
+
+/* Watermark logo mặt sau */
+.watermark-back {
+  position: absolute;
+  top: 150%;
+  left: 50%;
+  width: 60%;
+  transform: translate(-50%, -50%);
+  opacity: 0.1;
+  z-index: 1;
+}
+
+/* Xử lý phân trang in */
+.page-break {
+  page-break-before: always;
+}
+
+/* Tiêu đề trung tâm */
+.title-area {
+  margin-bottom: 20px;
+}
+
+.main-title {
+  font-size: 28pt;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-family: Arial, Tahoma, sans-serif;
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* In A5 Landscape */
+@media print {
+  body {
+    width: 210mm;
+    height: 148mm;
+    margin: 0;
+    padding: 0;
+    background: white;
+    font-family: Arial, sans-serif;
+    font-size: 14pt;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    page-break-after: always;
+  }
+
+  #print-area {
+    display: block !important;
+    width: 190mm; /* thu nhỏ lại 1 chút để còn chỗ cho khung viền */
+    height: 135mm;
+    padding: 10mm;
+    margin: auto;
+    box-sizing: border-box;
+    background: white;
+    text-align: center;
+    position: relative;
+    
+    /* ➡️ Thêm khung viền vào đây */
+    border: 2px dashed black;
+    border-radius: 8px; /* tùy chọn: bo góc cho đẹp */
+  }  
+
+  /* Mặt trước */
+  #clinicNamePrint {
+    font-size: 26pt;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+
+  #ticketNumberPrint {
+    font-size: 110pt;
+    font-weight: bold;
+    margin: 20px 0;
+  }
+
+  #timePrint {
+    font-size: 14pt;
+    margin-top: 0;
+  }
+
+  /* Mặt sau */
+  .back h4 {
+    font-size: 18pt;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+
+  .back ul {
+    font-size: 16pt;
+    list-style-position: inside;
+    padding-left: 0;
+    margin-top: 10px;
+  }
+
+  .back ul li {
+    margin-bottom: 6px;
+  }
+
+  .back p {
+    font-size: 14pt;
+    margin-top: 15px;
+  }
+
+  .front, .back {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  .no-print,
+  #login-container, #phatso-container, #admin-container, #phongkham-container {
+    display: none !important;
+  }
+
+  @page {
+    size: A5 landscape;
+    margin: 0;
+  }
+}
+
+/* Giao diện danh sách số đã gọi (giao diện dạng lưới) */
+.called-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.called-grid button {
+  padding: 6px;
+  border: 1px solid #ccc;
+  background: white;
+  color: black;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.called-grid button:hover {
+  background-color: #cce5ff;
+}
+
+.next-btn {
+  background-color: #007bff;
+  color: white;
+  font-size: 16px;
+  padding: 10px 20px;
+  border-radius: 8px;
+}
+
+.switch-clinic-btn {
+  background-color: #6c757d;
+  color: white;
+  font-weight: bold;
+  margin-right: 10px;
+  border-radius: 6px;
+  padding: 6px 12px;
+}
+
+.clinic-header {
+  background-color: #f5f5f5;
+  padding: 10px 20px;
+  border-left: 6px solid #007bff;
+  font-size: 20px;
+  font-weight: bold;
+  border-radius: 6px;
+}
+
+.phongkham-stats-box {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.stat-box {
+  background-color: #f0f8ff;
+  border: 1px solid #cce5ff;
+  border-radius: 8px;
+  padding: 10px 20px;
+  min-width: 100px;
+}
+
+.stat-label {
+  font-weight: bold;
+  color: #555;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #007bff;
+  margin-top: 5px;
+}
+.icon-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+  line-height: 32px;
+  text-align: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.icon-btn:hover {
+  background-color: #0056b3;
+}
+.icon-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.icon-btn:hover svg {
+  transform: scale(1.15);
+}
+/* Tên phòng khám trong bảng */
+.admin-input-text {
+  width: 90%;
+  padding: 6px 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+/* Ô số lượt */
+.admin-input-number {
+  width: 70px;
+  padding: 6px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+  text-align: center;
+}
+/* Giảm chiều cao dòng */
+#admin-clinic-list tbody tr {
+  height: 12px; /* bạn có thể giảm nữa nếu muốn nhỏ hơn */
+}
+
+/* Màu nền xen kẽ */
+#admin-clinic-list tbody tr:nth-child(even) {
+  background-color: #f0f8ff; /* xanh nhạt */
+}
+
+#admin-clinic-list tbody tr:nth-child(odd) {
+  background-color: #ffffff; /* trắng */
+}
+
+/* Hiệu ứng hover cho đẹp */
+#admin-clinic-list tbody tr:hover {
+  background-color: #e0f0ff;
+}
+/* ========================
+   TỐI ƯU BẢNG GIAO DIỆN MỚI
+======================== */
+
+/* Chiều cao hàng gọn nhẹ */
+table tr {
+  line-height: 1.2;
+  height: 36px;
+}
+
+/* Phông chữ và căn giữa cho bảng */
+table th, table td {
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+/* Màu nền xen kẽ */
+table tbody tr:nth-child(odd) {
+  background-color: #f8f9fa; /* xám nhạt */
+}
+
+table tbody tr:nth-child(even) {
+  background-color: #e9f5ff; /* xanh nhạt */
+}
+
+/* Hover nổi bật rõ */
+table tbody tr:hover {
+  background-color: #d0ebff !important;
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* Viền dưới rõ ràng */
+table td {
+  border-bottom: 1px solid #ddd;
+}
+
+/* Căn chỉnh ô đầu vào cho bảng admin */
+table input[type="text"],
+table input[type="number"] {
+  font-size: 14px;
+  padding: 4px 6px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+/* In đậm tên phòng khám ở bảng */
+.clinic-name-bold {
+  font-weight: bold;
+  color: #343a40; /* xám đậm */
+}

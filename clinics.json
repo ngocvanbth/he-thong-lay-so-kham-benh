@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Phòng khám Đông Y 1",
+    "limit": 20,
+    "issued": 0
+  },
+  {
+    "name": "Phòng khám Đông Y 2",
+    "limit": 20,
+    "issued": 0
+  },
+  {
+    "name": "Phòng khám Nội 1",
+    "limit": 20,
+    "issued": 0
+  },
+  {
+    "name": "Phòng khám Nội 2",
+    "limit": 20,
+    "issued": 0
+  },
+  {
+    "name": "Phòng khám Tai Mũi Họng",
+    "limit": 20,
+    "issued": 0
+  },
+  {
+    "name": "Phòng khám Mắt",
+    "limit": 20,
+    "issued": 0
+  }
+]
