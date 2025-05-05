@@ -4,21 +4,36 @@
   <meta charset="UTF-8">
   <title>HỆ THỐNG LẤY SỐ KHÁM BỆNH</title>
   <link rel="stylesheet" href="styles.css">
+  <!-- Quill CSS -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
 
-<!-- Đăng nhập -->
-<div id="login-container" class="container">
-  <h1>HỆ THỐNG LẤY SỐ KHÁM BỆNH</h1>
-  <h2>Đăng nhập</h2>
-  <label>ID: <input type="text" id="username"></label>
-  <label>Mật khẩu: <input type="password" id="password"></label>
-  <button onclick="login()">Đăng nhập</button>
-</div>
+  <div class="login-box">
+    <h1>HỆ THỐNG LẤY SỐ KHÁM BỆNH</h1>
+    <h2><i class="fas fa-sign-in-alt"></i> Đăng nhập</h2>
+    
+    <div class="login-field">
+      <label><i class="fas fa-user"></i> ID:</label>
+      <input type="text" id="username" placeholder="Nhập ID...">
+    </div>
+    
+    <div class="login-field">
+      <label><i class="fas fa-lock"></i> Mật khẩu:</label>
+      <input type="password" id="password" placeholder="Nhập mật khẩu...">
+    </div>
+    
+    <button onclick="login()">🔐 Đăng nhập</button>
+  </div>
 
 <!-- Phát số -->
 <div id="phatso-container" class="container" style="display: none;">
-  <h2>Phát số khám bệnh</h2>
+  <h2 class="section-title">
+    <i class="fas fa-clipboard-list"></i>
+    Phát số khám bệnh
+  </h2>
   <button class="logout-btn" onclick="logout()">Đăng xuất</button>
   <table>
     <thead>
@@ -91,7 +106,7 @@
 
 <!-- Admin -->
 <div id="admin-container" class="container" style="display: none;">
-  <h2>Quản lý Phòng Khám</h2>
+  <h2 class="section-title">🩺 Quản lý Phòng Khám</h2>
   <button class="logout-btn" onclick="logout()">Đăng xuất</button>
   <table id="admin-clinic-list">
     <thead>
@@ -122,7 +137,11 @@
       </tr>
     </tbody>
   </table>
-
+  <div id="highlight-editor" style="margin-top: 30px;">
+    <h3>Chỉnh sửa Dịch vụ nổi bật:</h3>
+    <div id="editor" style="height: 200px;"></div>
+    <button onclick="saveHighlight()" style="margin-top: 10px;">Lưu nội dung</button>
+  </div>
   <div style="margin-top: 20px;">
     <button onclick="saveChanges()">💾 Lưu thay đổi</button>
     <button onclick="resetIssued()">🔄 Reset về 100 số</button>
@@ -152,18 +171,38 @@
   <!-- Logo mặt sau -->
   <img src="logott.png" class="watermark-back" alt="Logo">
 
-  <div class="back">
-    <h4>Dịch vụ nổi bật:</h4>
-    <ul>
-      <li>Khám bệnh ngoài giờ</li>
-      <li>Tư vấn sức khỏe từ xa</li>
-      <li>Tiêm chủng, khám định kỳ</li>
-    </ul>
-    <p>Liên hệ: 1900.xxx.xxx hoặc đến trực tiếp quầy tư vấn.</p>
+  <div class="back" id="highlight-service">
+    <!-- Nội dung sẽ được nạp từ localStorage -->
   </div>
 </div>
 
 <script src="script.js"></script>
 
 </body>
+<!-- Quill JS -->
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script>
+  // Khởi tạo Quill
+  const quill = new Quill('#editor', {
+    theme: 'snow'
+  });
+
+  function saveHighlight() {
+    const content = quill.root.innerHTML.trim();
+    if (!content) {
+      alert("Nội dung không được để trống!");
+      return;
+    }
+    document.querySelector(".back").innerHTML = content;
+    localStorage.setItem("highlightHTML", content);
+    alert("Đã lưu nội dung dịch vụ nổi bật!");
+  }
+
+  function renderHighlightEditor() {
+    const saved = localStorage.getItem("highlightHTML");
+    if (saved) quill.root.innerHTML = saved;
+  }
+
+  window.addEventListener("load", renderHighlightEditor);
+</script>
 </html>

@@ -423,3 +423,117 @@ table input[type="number"] {
   font-weight: bold;
   color: #343a40; /* xám đậm */
 }
+.section-title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1976d2; /* Xanh công sở */
+  margin: 30px 0 20px;
+  position: relative;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.section-title::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 4px;
+  background: #1976d2;
+  margin: 10px auto 0;
+  border-radius: 2px;
+  animation: growBar 0.8s ease-in-out;
+}
+
+@keyframes growBar {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 60px;
+    opacity: 1;
+  }
+}
+.section-title {
+  font-size: 28px;
+  font-weight: bold;
+  color: #0d47a1;
+  text-align: center;
+  margin: 20px 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  position: relative;
+}
+
+.section-title::after {
+  content: "";
+  display: block;
+  width: 60px;
+  height: 4px;
+  background: #1976d2;
+  margin: 8px auto 0;
+  border-radius: 2px;
+}
+.login-box {
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 30px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.login-box h1 {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.login-box h2 {
+  font-size: 18px;
+  color: #007BFF;
+  margin-bottom: 20px;
+}
+
+.login-field {
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.login-field label {
+  flex: 1;
+  text-align: left;
+  font-weight: bold;
+}
+
+.login-field input {
+  flex: 2;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.login-box button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.login-box button:hover {
+  background: #0056b3;
+}
+.login-box h1 {
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  background: linear-gradient(90deg, #007bff, #6f42c1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

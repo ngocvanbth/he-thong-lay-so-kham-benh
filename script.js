@@ -9,24 +9,26 @@ const users = [
 
 // Clinics mặc định
 let clinics = [
-    { name: "Phòng khám Đông Y 1", limit: 20, issued: 0 },
-    { name: "Phòng khám Đông Y 2", limit: 20, issued: 0 },
-    { name: "Phòng khám Nội 1", limit: 20, issued: 0 },
-    { name: "Phòng khám Nội 2", limit: 20, issued: 0 },
-    { name: "Phòng khám Nội 3", limit: 20, issued: 0 },
-    { name: "Phòng khám Nội 4", limit: 20, issued: 0 },
-    { name: "Phòng khám Nội 5", limit: 20, issued: 0 },
-    { name: "Phòng khám Nhi 1", limit: 20, issued: 0 },
-    { name: "Phòng khám Nhi 2", limit: 20, issued: 0 },
+    { name: "Phòng khám Đông Y 1", limit: 100, issued: 0 },
+    { name: "Phòng khám Đông Y 2", limit: 100, issued: 0 },
+    { name: "Phòng khám Nội 1", limit: 100, issued: 0 },
+    { name: "Phòng khám Nội 2", limit: 100, issued: 0 },
+    { name: "Phòng khám Nội 3", limit: 100, issued: 0 },
+    { name: "Phòng khám Nội 4", limit: 100, issued: 0 },
+    { name: "Phòng khám Nội 5", limit: 100, issued: 0 },
+    { name: "Phòng khám Nhi 1", limit: 100, issued: 0 },
+    { name: "Phòng khám Nhi 2", limit: 100, issued: 0 },
     { name: "Phòng khám Tai Mũi Họng", limit: 20, issued: 0 },
-    { name: "Phòng khám Mắt", limit: 20, issued: 0 },
-    { name: "Phòng khám Sản khoa", limit: 20, issued: 0 },
-    { name: "Phòng khám Ngoại Tổng hợp", limit: 20, issued: 0 }
+    { name: "Phòng khám Mắt", limit: 100, issued: 0 },
+    { name: "Phòng khám Sản khoa", limit: 100, issued: 0 },
+    { name: "Phòng khám Ngoại Tổng hợp", limit: 100, issued: 0 }
 ];
 
 let selectedClinic = "";
 let calledNumbers = {}; // Phatso cấp số
 let calledHistory = {}; // Phongkham đã gọi
+let audioQueue = [];         // Hàng đợi âm thanh
+let isPlayingAudio = false;  // Trạng thái đang phát hay không
 
 function saveClinics() {
     localStorage.setItem("clinics", JSON.stringify(clinics));
@@ -82,10 +84,12 @@ function logout() {
 }
 
 function showDashboard(user) {
-    document.getElementById("login-container").style.display = "none";
+    const loginBox = document.querySelector(".login-box");
+    if (loginBox) loginBox.style.display = "none";
     if (user.role === "admin") {
         document.getElementById("admin-container").style.display = "block";
         renderAdmin();
+        renderHighlightEditor();
     } else if (user.role === "phatso") {
         document.getElementById("phatso-container").style.display = "block";
         renderPhatSo();
@@ -142,6 +146,7 @@ function renderAdmin() {
 
         tbody.appendChild(row);
     });
+    renderHighlightEditor();
 }
 
 function deleteClinic(index) {
@@ -178,7 +183,7 @@ function addClinic() {
     // Xoá nội dung input
     document.getElementById("new-clinic-name").value = "";
     document.getElementById("new-clinic-limit").value = "";
-
+    
     renderAdmin();
 }
 
@@ -272,6 +277,16 @@ function handlePrint(clinicName, number) {
     document.getElementById("timePrint").innerText = now.toLocaleString("vi-VN");
     const printArea = document.getElementById("print-area");
     printArea.style.display = "block";
+    const highlight = localStorage.getItem("highlightService") || `
+  <h4>Dịch vụ nổi bật:</h4>
+  <ul>
+    <li>Khám bệnh ngoài giờ</li>
+    <li>Tư vấn sức khỏe từ xa</li>
+    <li>Tiêm chủng, khám định kỳ</li>
+  </ul>
+  <p>Liên hệ: 1900.xxx.xxx hoặc đến trực tiếp quầy tư vấn.</p>
+`;
+document.getElementById("highlight-service").innerHTML = localStorage.getItem("highlightHTML");
     setTimeout(() => {
         window.print();
         printArea.style.display = "none";
@@ -304,7 +319,7 @@ async function callNextNumbers(count) {
             `audio/so-${number}.mp3`,
             `audio/${slug}.mp3`
         ];
-        await playAudioSequenceAsync(files);
+        enqueueAudioSequence(files);
         history.add(number);
             }
 
@@ -343,19 +358,32 @@ function confirmClinic() {
 }
 
 
-async function playAudioSequenceAsync(files) {
+function enqueueAudioSequence(files) {
+    audioQueue.push(files);
+    playAudioQueue();
+}
+
+async function playAudioQueue() {
+    if (isPlayingAudio || audioQueue.length === 0) return;
+
+    isPlayingAudio = true;
+    const files = audioQueue.shift();
+
     for (let i = 0; i < files.length; i++) {
         await new Promise(resolve => {
             const audio = new Audio(files[i]);
             audio.onloadedmetadata = () => {
                 const duration = audio.duration;
-                const nextStartTime = (duration - 0.1) * 800;
+                const nextStartTime = (duration - 0.1) * 700;
                 setTimeout(resolve, nextStartTime);
                 audio.play();
             };
             audio.onerror = resolve;
         });
     }
+
+    isPlayingAudio = false;
+    playAudioQueue(); // Gọi tiếp chuỗi tiếp theo nếu còn
 }
 
 function updateCalledList() {
@@ -406,7 +434,7 @@ function recallNumber(number) {
     `audio/so-${number}.mp3`,
     `audio/${slug}.mp3`
   ];
-  playAudioSequenceAsync(files);
+  enqueueAudioSequence(files);
 }
 
 function switchClinic() {
@@ -427,4 +455,35 @@ function switchClinic() {
   
     // Xoá lựa chọn phòng khám đã lưu
     localStorage.removeItem("selectedClinic");
+  }
+  function loadHighlight() {
+    const saved = localStorage.getItem("highlightHTML");
+    if (saved) {
+        document.getElementById("highlight-service").innerHTML = saved;
+    }
+  }
+  
+  function saveHighlight() {
+    const textarea = document.getElementById("highlight-textarea");
+    const content = textarea.value.trim();
+    if (!content) {
+      alert("Nội dung không được để trống!");
+      return;
+    }
+    document.getElementById("highlight-service").innerHTML = content;
+    localStorage.setItem("highlightHTML", content);
+    alert("Đã lưu nội dung dịch vụ nổi bật!");
+  }
+  
+  function renderHighlightEditor() {
+    const saved = localStorage.getItem("highlightHTML");
+    document.getElementById("highlight-textarea").value = saved || `
+  <h4>Dịch vụ nổi bật:</h4>
+  <ul>
+    <li>Khám bệnh ngoài giờ</li>
+    <li>Tư vấn sức khỏe từ xa</li>
+    <li>Tiêm chủng, khám định kỳ</li>
+  </ul>
+  <p>Liên hệ: 1900.xxx.xxx hoặc đến trực tiếp quầy tư vấn.</p>
+    `.trim();
   }
