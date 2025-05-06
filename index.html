@@ -50,39 +50,57 @@
 
 <!-- Phòng khám -->
 <div id="phongkham-container" class="container" style="display: none;">
-  <h2 id="main-heading" style="font-size: 26px; color: #007bff; font-weight: bold;">
-    VUI LÒNG THIẾT LẬP PHÒNG KHÁM!
+  <h2 id="main-heading" style="font-size: 26px; color: #007bff; font-weight: bold; text-align: center; margin-bottom: 20px;">
+    🏥 <span style="text-decoration: underline;">VUI LÒNG THIẾT LẬP PHÒNG KHÁM!</span>
   </h2>
-  <div style="display: flex; justify-content: space-between; align-items: center;">
+
+  <!-- Hiển thị tên phòng khám và các nút -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h3 id="clinic-name-display" class="clinic-header" style="
-  background-color: #007bff;
-  color: white;
-  padding: 12px 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-  font-size: 22px;
-  font-weight: bold;
-  letter-spacing: 1px;
-  display: none;
-"></h3>
-    <div id="top-right-buttons" style="display: none;">
-      <button onclick="switchClinic()" class="logout-btn">Đổi phòng khám</button>
-      <button onclick="logout()" class="logout-btn">Đăng xuất</button>
-    </div>
-  </div>
-  
+      background-color: #007bff;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      font-size: 22px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      display: none;
+    ">
+      🏥 <span id="clinic-name-text"></span>
+    </h3>
 
-  <div id="clinic-select-container">
-    <div style="margin-top: 20px;">
-      <select id="clinic-select" style="font-size: 18px; padding: 8px 16px; border-radius: 6px;"></select>
-      <button onclick="confirmClinic()" style="font-size: 18px; padding: 8px 16px; margin-left: 8px;">OK</button>
+    <div id="top-right-buttons" style="display: none; gap: 10px;">
+      <button onclick="switchClinic()" class="logout-btn">🔄 Đổi phòng khám</button>
+      <button onclick="logout()" class="logout-btn">🚪 Đăng xuất</button>
     </div>
   </div>
 
+  <!-- Khối chọn phòng khám -->
+  <div id="clinic-select-container" style="text-align: center;">
+    <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px;">
+      <select id="clinic-select" style="font-size: 18px; padding: 8px 16px; border-radius: 6px; min-width: 250px;">
+        <option value="">-- Chọn phòng khám --</option>
+      </select>
+      <button onclick="confirmClinic()" style="
+        font-size: 18px;
+        padding: 8px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      ">✅ OK</button>
+    </div>
+  </div>
+
+  <!-- Giao diện chính -->
   <div id="phongkham-action" style="display: none;">
-    <button onclick="callNextNumbers(1)" class="next-btn" style="margin-top: 20px;">NEXT</button>
+    <div style="text-align: center; margin-top: 20px;">
+      <button onclick="callNextNumbers(1)" class="next-btn" style="padding: 12px 32px;">📢 NEXT</button>
+    </div>
 
-    <div id="phongkham-stats" class="phongkham-stats-box" style="display: none;">
+    <div id="phongkham-stats" class="phongkham-stats-box" style="display: none; justify-content: center; margin-top: 20px;">
       <div class="stat-box">
         <div class="stat-label">Đã cấp</div>
         <div id="total-issued" class="stat-value">0</div>
@@ -98,8 +116,8 @@
     </div>
 
     <div id="called-section" style="margin-top: 20px; display: none;">
-      <h4>Danh sách số đã gọi:</h4>
-      <div id="called-list" class="called-grid"></div>
+      <h4 style="text-align: center;">📜 Danh sách số đã gọi:</h4>
+      <div id="called-list" class="called-grid" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;"></div>
     </div>
   </div>
 </div>

@@ -247,14 +247,17 @@ function renderPhatSo() {
         row.innerHTML = `
             <td>${clinic.name}</td>
             <td>${clinic.issued}</td>
-            <td>${clinic.limit - clinic.issued}</td>
-            <td><button onclick="issueNumber('${clinic.name}')">Cấp số</button></td>
+            <td style="color: green;">${clinic.limit - clinic.issued}</td>
+            <td>
+                <button onclick="issueNumber('${clinic.name}', false)" class="btn-normal">Cấp số</button>
+                <button onclick="issueNumber('${clinic.name}', true)" class="btn-priority">Ưu tiên</button>
+            </td>
         `;
         table.appendChild(row);
     });
 }
 
-function issueNumber(name) {
+function issueNumber(name, isPriority = false) {
     loadCalledNumbers();
     const clinic = clinics.find(c => c.name === name);
     if (!clinic || clinic.issued >= clinic.limit) {
@@ -263,17 +266,24 @@ function issueNumber(name) {
     }
     clinic.issued++;
     if (!calledNumbers[clinic.name]) calledNumbers[clinic.name] = [];
-    calledNumbers[clinic.name].push(clinic.issued);
+
+    const number = clinic.issued;
+    const displayNumber = isPriority ? `A${number.toString().padStart(2, "0")}` : number;
+
+    calledNumbers[clinic.name].push(displayNumber);
     saveClinics();
     saveCalledNumbers();
     renderPhatSo();
-    handlePrint(clinic.name, clinic.issued);
+    handlePrint(clinic.name, displayNumber, isPriority);
 }
 
-function handlePrint(clinicName, number) {
+function handlePrint(clinicName, number, isPriority = false) {
     const now = new Date();
     document.getElementById("clinicNamePrint").innerText = clinicName;
-    document.getElementById("ticketNumberPrint").innerText = number.toString().padStart(2, "0");
+    const displayNumber = typeof number === "string"
+     ? number
+     : number.toString().padStart(2, "0");
+    document.getElementById("ticketNumberPrint").innerText = displayNumber;
     document.getElementById("timePrint").innerText = now.toLocaleString("vi-VN");
     const printArea = document.getElementById("print-area");
     printArea.style.display = "block";
@@ -303,37 +313,51 @@ async function callNextNumbers(count) {
 
     const queue = [...calledNumbers[clinicName] || []];
     const history = new Set(JSON.parse(localStorage.getItem("calledHistory") || "{}")[clinicName] || []);
-    const toCall = queue.filter(n => !history.has(n));
+
+    // Lọc các số chưa gọi
+    let toCall = queue.filter(n => !history.has(n));
+
+    // 🔁 Ưu tiên gọi số bắt đầu bằng A trước (ưu tiên)
+    toCall.sort((a, b) => {
+        const aIsPriority = typeof a === "string" && a.startsWith("A");
+        const bIsPriority = typeof b === "string" && b.startsWith("A");
+
+        if (aIsPriority && !bIsPriority) return -1;
+        if (!aIsPriority && bIsPriority) return 1;
+
+        const aNum = parseInt(typeof a === "string" ? a.replace("A", "") : a);
+        const bNum = parseInt(typeof b === "string" ? b.replace("A", "") : b);
+        return aNum - bNum;
+    });
+
     if (toCall.length === 0) {
         alert("Không có số mới để gọi!");
         return;
     }
-
-    // ✅ Tên file KHÔNG dấu, chỉ thay khoảng trắng bằng gạch ngang
+    document.getElementById("called-section").style.display = "none";
     const slug = clinicName.toLowerCase().replace(/\s+/g, "-");
 
     for (let i = 0; i < count && i < toCall.length; i++) {
         const number = toCall[i];
-        const files = [
-            "audio/moi-so.mp3",
-            `audio/so-${number}.mp3`,
-            `audio/${slug}.mp3`
-        ];
+        const isPriority = typeof number === "string" && number.startsWith("A");
+        const numOnly = isPriority
+            ? number.slice(1).toString().padStart(2, "0")
+            : number.toString().padStart(2, "0");
+
+        const files = isPriority
+            ? ["audio/uu-tien.mp3", "audio/a.mp3", `audio/so-${numOnly}.mp3`, `audio/${slug}.mp3`]
+            : ["audio/moi-so.mp3", `audio/so-${numOnly}.mp3`, `audio/${slug}.mp3`];
+
         enqueueAudioSequence(files);
         history.add(number);
-            }
+    }
 
     const fullHistory = JSON.parse(localStorage.getItem("calledHistory") || "{}");
     fullHistory[clinicName] = Array.from(history);
     localStorage.setItem("calledHistory", JSON.stringify(fullHistory));
 
-    loadCalledHistory();     // ⬅ để cập nhật biến `calledHistory` toàn cục
-    updateCalledList();      // ⬅ để giao diện render lại
-    }
-
-function showClinicSelect() {
-    const select = document.getElementById("clinic-select");
-    select.innerHTML = clinics.map(c => `<option value="${c.name}">${c.name}</option>`).join("");
+    loadCalledHistory();
+    updateCalledList();
 }
 
 function confirmClinic() {
@@ -347,14 +371,11 @@ function confirmClinic() {
     // Hiện khối chức năng chính
     document.getElementById("phongkham-action").style.display = "block";
 
-    // Ẩn thống kê & danh sách gọi số lúc đầu (chỉ hiện sau khi gọi)
-    document.getElementById("phongkham-stats").style.display = "none";
-    document.getElementById("called-section").style.display = "none";
-
     updateCalledList();
     document.getElementById("top-right-buttons").style.display = "block";
     document.getElementById("main-heading").innerText = "GỌI BỆNH NHÂN VÀO PHÒNG KHÁM!";
     localStorage.setItem("selectedClinic", selectedClinic);
+    document.getElementById("phongkham-stats").style.display = "flex";
 }
 
 
@@ -374,7 +395,7 @@ async function playAudioQueue() {
             const audio = new Audio(files[i]);
             audio.onloadedmetadata = () => {
                 const duration = audio.duration;
-                const nextStartTime = (duration - 0.1) * 700;
+                const nextStartTime = (duration - 0.1) * 650;
                 setTimeout(resolve, nextStartTime);
                 audio.play();
             };
@@ -383,6 +404,7 @@ async function playAudioQueue() {
     }
 
     isPlayingAudio = false;
+    document.getElementById("called-section").style.display = "block";
     playAudioQueue(); // Gọi tiếp chuỗi tiếp theo nếu còn
 }
 
@@ -392,22 +414,22 @@ function updateCalledList() {
     const statsBox = document.getElementById("phongkham-stats");
   
     const fullHistory = calledHistory[selectedClinic] || [];
-    const lastCalled = fullHistory.length > 0 ? Math.max(...fullHistory) : "-";
-  
-    if (fullHistory.length === 0) {
-      section.style.display = "none";
-      statsBox.style.display = "none";
-      return;
-    }
-  
-    section.style.display = "block";
+    const lastCalled = fullHistory.length > 0 ? fullHistory[fullHistory.length - 1] : "-";
+
+    // ✅ Luôn hiện thống kê
     statsBox.style.display = "flex";
-  
-    // Chỉ hiện các số đã gọi
-    container.innerHTML = fullHistory.map(n =>
-      `<button onclick="recallNumber(${n})">Số ${n}</button>`
-    ).join("");
-  
+
+    // ✅ Hiện danh sách nếu có ít nhất 1 số đã gọi
+    if (fullHistory.length > 0) {
+        section.style.display = "block";
+        container.innerHTML = fullHistory.map(n =>
+            `<button onclick="recallNumber('${n}')">Số ${n}</button>`
+        ).join("");
+    } else {
+        section.style.display = "none";
+        container.innerHTML = "";
+    }
+
     const clinic = clinics.find(c => c.name === selectedClinic);
     const totalIssued = clinic ? clinic.issued : 0;
     const remaining = clinic ? (clinic.issued - fullHistory.length) : 0;
@@ -415,26 +437,29 @@ function updateCalledList() {
     document.getElementById("total-issued").innerText = totalIssued;
     document.getElementById("remaining").innerText = remaining;
     document.getElementById("last-called").innerText = lastCalled;
-  }
+}
   
 
 window.onload = function () {
     loadClinics();
     loadCalledNumbers();
     loadCalledHistory();
+    renderClinicSelect();
     const user = JSON.parse(localStorage.getItem("currentUser"));
     if (user) showDashboard(user);
 };
 
 
 function recallNumber(number) {
-  const slug = selectedClinic.toLowerCase().replace(/\s+/g, "-");
-  const files = [
-    "audio/moi-so.mp3",
-    `audio/so-${number}.mp3`,
-    `audio/${slug}.mp3`
-  ];
-  enqueueAudioSequence(files);
+    const slug = selectedClinic.toLowerCase().replace(/\s+/g, "-");
+    const isPriority = typeof number === "string" && number.startsWith("A");
+    const numOnly = isPriority ? number.slice(1) : number;
+
+    const files = isPriority
+      ? ["audio/uu-tien.mp3", "audio/a.mp3", `audio/so-${numOnly}.mp3`, `audio/${slug}.mp3`]
+      : ["audio/moi-so.mp3", `audio/so-${number}.mp3`, `audio/${slug}.mp3`];
+
+    enqueueAudioSequence(files);
 }
 
 function switchClinic() {
@@ -486,4 +511,21 @@ function switchClinic() {
   </ul>
   <p>Liên hệ: 1900.xxx.xxx hoặc đến trực tiếp quầy tư vấn.</p>
     `.trim();
+  }
+  function showClinicSelect() {
+    document.getElementById("clinic-select-container").style.display = "block";
+    document.getElementById("phongkham-action").style.display = "none";
+    document.getElementById("top-right-buttons").style.display = "none";
+    document.getElementById("main-heading").innerText = "VUI LÒNG THIẾT LẬP PHÒNG KHÁM!";
+    document.getElementById("clinic-name-display").style.display = "none";
+  }
+  function renderClinicSelect() {
+    const select = document.getElementById("clinic-select");
+    select.innerHTML = '<option value="">-- Chọn phòng khám --</option>';
+    clinics.forEach(clinic => {
+      const option = document.createElement("option");
+      option.value = clinic.name;
+      option.textContent = clinic.name;
+      select.appendChild(option);
+    });
   }

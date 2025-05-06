@@ -537,3 +537,21 @@ table input[type="number"] {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+.btn-normal {
+  background-color: #007bff;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-priority {
+  background-color: orange;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  margin-left: 6px;
+  cursor: pointer;
+}
