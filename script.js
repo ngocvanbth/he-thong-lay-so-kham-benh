@@ -18,7 +18,7 @@ let clinics = [
     { name: "Phòng khám Nội 5", limit: 100, issued: 0 },
     { name: "Phòng khám Nhi 1", limit: 100, issued: 0 },
     { name: "Phòng khám Nhi 2", limit: 100, issued: 0 },
-    { name: "Phòng khám Tai Mũi Họng", limit: 20, issued: 0 },
+    { name: "Phòng khám Tai Mũi Họng", limit: 100, issued: 0 },
     { name: "Phòng khám Mắt", limit: 100, issued: 0 },
     { name: "Phòng khám Sản khoa", limit: 100, issued: 0 },
     { name: "Phòng khám Ngoại Tổng hợp", limit: 100, issued: 0 }
@@ -31,40 +31,40 @@ let audioQueue = [];         // Hàng đợi âm thanh
 let isPlayingAudio = false;  // Trạng thái đang phát hay không
 
 function saveClinics() {
-    localStorage.setItem("clinics", JSON.stringify(clinics));
+    firebase.database().ref("clinics").set(clinics);
 }
 
-function loadClinics() {
-    const data = localStorage.getItem("clinics");
-    if (data) clinics = JSON.parse(data);
-    else saveClinics();
+function loadClinics(callback) {
+    firebase.database().ref("clinics").once("value", snapshot => {
+        const data = snapshot.val();
+        if (data) {
+            clinics = data;
+        }
+        if (typeof callback === "function") callback();
+    });
 }
 
 function saveCalledNumbers() {
-    localStorage.setItem("calledNumbers", JSON.stringify(calledNumbers));
+    firebase.database().ref("calledNumbers").set(calledNumbers);
 }
 
-function loadCalledNumbers() {
-    const data = localStorage.getItem("calledNumbers");
-    if (data) calledNumbers = JSON.parse(data);
-    clinics.forEach(c => {
-        if (!Array.isArray(calledNumbers[c.name])) calledNumbers[c.name] = [];
+function loadCalledHistory(callback) {
+    firebase.database().ref("calledHistory").once("value", snapshot => {
+        const data = snapshot.val();
+        if (data) {
+            calledHistory = data;
+        }
+        clinics.forEach(c => {
+            if (!Array.isArray(calledHistory[c.name])) calledHistory[c.name] = [];
+        });
+        if (typeof callback === "function") callback();
     });
-    saveCalledNumbers();
 }
 
 function saveCalledHistory() {
-    localStorage.setItem("calledHistory", JSON.stringify(calledHistory));
+    firebase.database().ref("calledHistory").set(calledHistory);
 }
 
-function loadCalledHistory() {
-    const data = localStorage.getItem("calledHistory");
-    if (data) calledHistory = JSON.parse(data);
-    clinics.forEach(c => {
-        if (!Array.isArray(calledHistory[c.name])) calledHistory[c.name] = [];
-    });
-    saveCalledHistory();
-}
 
 function login() {
     const id = document.getElementById("username").value.trim();
@@ -304,6 +304,8 @@ document.getElementById("highlight-service").innerHTML = localStorage.getItem("h
 }
 
 async function callNextNumbers(count) {
+    await new Promise(resolve => loadCalledNumbers(resolve)); // ⬅️ Bổ sung dòng này
+
     const clinicName = selectedClinic;
     const clinic = clinics.find(c => c.name === clinicName);
     if (!clinic) {
@@ -312,7 +314,7 @@ async function callNextNumbers(count) {
     }
 
     const queue = [...calledNumbers[clinicName] || []];
-    const history = new Set(JSON.parse(localStorage.getItem("calledHistory") || "{}")[clinicName] || []);
+    const history = new Set(calledHistory[clinicName] || []);
 
     // Lọc các số chưa gọi
     let toCall = queue.filter(n => !history.has(n));
@@ -334,6 +336,7 @@ async function callNextNumbers(count) {
         alert("Không có số mới để gọi!");
         return;
     }
+
     document.getElementById("called-section").style.display = "none";
     const slug = clinicName.toLowerCase().replace(/\s+/g, "-");
 
@@ -352,17 +355,14 @@ async function callNextNumbers(count) {
         history.add(number);
     }
 
-    const fullHistory = JSON.parse(localStorage.getItem("calledHistory") || "{}");
-    fullHistory[clinicName] = Array.from(history);
-    localStorage.setItem("calledHistory", JSON.stringify(fullHistory));
-
-    loadCalledHistory();
+    calledHistory[clinicName] = Array.from(history);
+    saveCalledHistory();
     updateCalledList();
 }
 
 function confirmClinic() {
     selectedClinic = document.getElementById("clinic-select").value;
-    document.getElementById("clinic-name-display").innerText = selectedClinic;
+    document.getElementById("clinic-name-text").innerText = selectedClinic;
     document.getElementById("clinic-name-display").style.display = "block";
     
     // Ẩn phần chọn phòng khám
@@ -441,12 +441,15 @@ function updateCalledList() {
   
 
 window.onload = function () {
-    loadClinics();
-    loadCalledNumbers();
-    loadCalledHistory();
-    renderClinicSelect();
-    const user = JSON.parse(localStorage.getItem("currentUser"));
-    if (user) showDashboard(user);
+    loadClinics(() => {
+        loadCalledNumbers(() => {
+            loadCalledHistory(() => {
+                renderClinicSelect();
+                const user = JSON.parse(localStorage.getItem("currentUser"));
+                if (user) showDashboard(user);
+            });
+        });
+    });
 };
 
 
@@ -488,31 +491,7 @@ function switchClinic() {
     }
   }
   
-  function saveHighlight() {
-    const textarea = document.getElementById("highlight-textarea");
-    const content = textarea.value.trim();
-    if (!content) {
-      alert("Nội dung không được để trống!");
-      return;
-    }
-    document.getElementById("highlight-service").innerHTML = content;
-    localStorage.setItem("highlightHTML", content);
-    alert("Đã lưu nội dung dịch vụ nổi bật!");
-  }
-  
-  function renderHighlightEditor() {
-    const saved = localStorage.getItem("highlightHTML");
-    document.getElementById("highlight-textarea").value = saved || `
-  <h4>Dịch vụ nổi bật:</h4>
-  <ul>
-    <li>Khám bệnh ngoài giờ</li>
-    <li>Tư vấn sức khỏe từ xa</li>
-    <li>Tiêm chủng, khám định kỳ</li>
-  </ul>
-  <p>Liên hệ: 1900.xxx.xxx hoặc đến trực tiếp quầy tư vấn.</p>
-    `.trim();
-  }
-  function showClinicSelect() {
+   function showClinicSelect() {
     document.getElementById("clinic-select-container").style.display = "block";
     document.getElementById("phongkham-action").style.display = "none";
     document.getElementById("top-right-buttons").style.display = "none";
