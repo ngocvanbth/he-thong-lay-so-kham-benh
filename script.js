@@ -390,9 +390,17 @@ async function callNextNumbers(count) {
 
 function confirmClinic() {
     selectedClinic = document.getElementById("clinic-select").value;
-    document.getElementById("clinic-name-text").innerText = selectedClinic;
-    document.getElementById("clinic-name-display").style.display = "block";
-    
+
+    const nameText = document.getElementById("clinic-name-text");
+    const nameDisplay = document.getElementById("clinic-name-display");
+
+    if (nameText) {
+        nameText.innerText = selectedClinic;
+    }
+    if (nameDisplay) {
+        nameDisplay.style.display = "block";
+    }
+
     // Ẩn phần chọn phòng khám
     document.getElementById("clinic-select-container").style.display = "none";
 
