@@ -3,7 +3,7 @@
 const firebaseConfig = {
     apiKey: "AIzaSyAHLTITwmLt845c1pvhBtvJuV5OLZN0dDA",
     authDomain: "ttytsokhambenh.firebaseapp.com",
-    databaseURL: "https://ttytsokhambenh-default-rtdb.firebaseio.com",
+    databaseURL: "https://ttytsokhambenh-default-rtdb.asia-southeast1.firebasedatabase.app/",
     projectId: "ttytsokhambenh",
     storageBucket: "ttytsokhambenh.firebasestorage.app",
     messagingSenderId: "805566207765",
@@ -12,13 +12,21 @@ const firebaseConfig = {
   };
   
   firebase.initializeApp(firebaseConfig);
-// Gắn cứng danh sách users
-const users = [
-    { id: "admin", password: "admin", role: "admin" },
-    { id: "phatso", password: "123456", role: "phatso" },
-    { id: "phongkham", password: "123456", role: "phongkham" }
-];
+  let users = [];
 
+firebase.database().ref("users").once("value")
+  .then(snapshot => {
+    const data = snapshot.val();
+    if (data) {
+      users = Object.keys(data).map(key => ({
+        id: key,
+        ...data[key]
+      }));
+    }
+  })
+  .catch(error => {
+    console.error("Error loading users from Firebase:", error);
+  });
 // Clinics mặc định
 let clinics = [
     { name: "Phòng khám Đông Y 1", limit: 100, issued: 0 },
