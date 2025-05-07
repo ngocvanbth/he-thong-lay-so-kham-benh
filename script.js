@@ -2,13 +2,13 @@
 // === Khởi tạo Firebase ===
 const firebaseConfig = {
     apiKey: "AIzaSyAHLTITwmLt845c1pvhBtvJuV5OLZN0dDA",
-  authDomain: "ttytsokhambenh.firebaseapp.com",
-  projectId: "ttytsokhambenh",
-  storageBucket: "ttytsokhambenh.firebasestorage.app",
-  messagingSenderId: "805566207765",
-  appId: "1:805566207765:web:1dedb017959e0c95a8bb1c",
-  measurementId: "G-D9S4XHFCBV"
-};
+    authDomain: "ttytsokhambenh.firebaseapp.com",
+    projectId: "ttytsokhambenh",
+    storageBucket: "ttytsokhambenh.firebasestorage.app",
+    messagingSenderId: "805566207765",
+    appId: "1:805566207765:web:e083cca4dd29bc59a8bb1c",
+    measurementId: "G-VDK48MJ8Q4"
+  };
   
   firebase.initializeApp(firebaseConfig);
 // Gắn cứng danh sách users
