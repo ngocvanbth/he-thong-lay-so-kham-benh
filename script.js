@@ -67,7 +67,15 @@ function loadClinics(callback) {
 function saveCalledNumbers() {
     firebase.database().ref("calledNumbers").set(calledNumbers);
 }
-
+function loadCalledNumbers(callback) {
+    firebase.database().ref("calledNumbers").once("value", snapshot => {
+        const data = snapshot.val();
+        if (data) {
+            calledNumbers = data;
+        }
+        if (typeof callback === "function") callback();
+    });
+}
 function loadCalledHistory(callback) {
     firebase.database().ref("calledHistory").once("value", snapshot => {
         const data = snapshot.val();
