@@ -394,24 +394,28 @@ function confirmClinic() {
     const nameText = document.getElementById("clinic-name-text");
     const nameDisplay = document.getElementById("clinic-name-display");
 
-    if (nameText) {
-        nameText.innerText = selectedClinic;
-    }
-    if (nameDisplay) {
-        nameDisplay.style.display = "block";
+    if (!selectedClinic) {
+        alert("Vui lòng chọn phòng khám!");
+        return;
     }
 
-    // Ẩn phần chọn phòng khám
-    document.getElementById("clinic-select-container").style.display = "none";
+    if (nameText) nameText.innerText = selectedClinic;
+    if (nameDisplay) nameDisplay.style.display = "block";
 
-    // Hiện khối chức năng chính
-    document.getElementById("phongkham-action").style.display = "block";
+    const selectContainer = document.getElementById("clinic-select-container");
+    const actionContainer = document.getElementById("phongkham-action");
+    const topButtons = document.getElementById("top-right-buttons");
+    const heading = document.getElementById("main-heading");
+    const statsBox = document.getElementById("phongkham-stats");
 
-    updateCalledList();
-    document.getElementById("top-right-buttons").style.display = "block";
-    document.getElementById("main-heading").innerText = "GỌI BỆNH NHÂN VÀO PHÒNG KHÁM!";
+    if (selectContainer) selectContainer.style.display = "none";
+    if (actionContainer) actionContainer.style.display = "block";
+    if (topButtons) topButtons.style.display = "block";
+    if (heading) heading.innerText = "GỌI BỆNH NHÂN VÀO PHÒNG KHÁM!";
+    if (statsBox) statsBox.style.display = "flex";
+
     localStorage.setItem("selectedClinic", selectedClinic);
-    document.getElementById("phongkham-stats").style.display = "flex";
+    updateCalledList();
 }
 
 
@@ -481,8 +485,10 @@ window.onload = function () {
         loadCalledNumbers(() => {
             loadCalledHistory(() => {
                 renderClinicSelect();
-                const user = JSON.parse(localStorage.getItem("currentUser"));
-                if (user) showDashboard(user);
+                setTimeout(() => {
+                    const user = JSON.parse(localStorage.getItem("currentUser"));
+                    if (user) showDashboard(user);
+                }, 10); // trì hoãn nhẹ để DOM render xong
             });
         });
     });
