@@ -1,5 +1,16 @@
 // ====== script.js ======
-
+// === Khởi tạo Firebase ===
+const firebaseConfig = {
+    apiKey: "AIzaSyAHLTITwmLt845c1pvhBtvJuV5OLZN0dDA",
+  authDomain: "ttytsokhambenh.firebaseapp.com",
+  projectId: "ttytsokhambenh",
+  storageBucket: "ttytsokhambenh.firebasestorage.app",
+  messagingSenderId: "805566207765",
+  appId: "1:805566207765:web:1dedb017959e0c95a8bb1c",
+  measurementId: "G-D9S4XHFCBV"
+};
+  
+  firebase.initializeApp(firebaseConfig);
 // Gắn cứng danh sách users
 const users = [
     { id: "admin", password: "admin", role: "admin" },
