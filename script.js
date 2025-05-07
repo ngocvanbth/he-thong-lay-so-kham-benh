@@ -30,47 +30,21 @@ let calledHistory = {}; // Phongkham đã gọi
 let audioQueue = [];         // Hàng đợi âm thanh
 let isPlayingAudio = false;  // Trạng thái đang phát hay không
 
-async function saveClinics() {
-    for (const clinic of clinics) {
-        await firebase.database().ref("clinics/" + clinic.name).set({
-            limit: clinic.limit,
-            issued: clinic.issued || 0
-        });
-    }
-
+function saveClinics() {
     localStorage.setItem("clinics", JSON.stringify(clinics));
 }
 
-async function loadClinics() {
-    const snapshot = await firebase.database().ref("clinics").once("value");
-    const data = snapshot.val();
-    if (data) {
-        clinics = Object.keys(data).map(name => ({
-            name,
-            limit: data[name].limit || 100,
-            issued: data[name].issued || 0
-        }));
-    }
-
+function loadClinics() {
     const data = localStorage.getItem("clinics");
     if (data) clinics = JSON.parse(data);
     else saveClinics();
 }
 
-async function saveCalledNumbers() {
-    await firebase.database().ref("calledNumbers").set(calledNumbers);
-
+function saveCalledNumbers() {
     localStorage.setItem("calledNumbers", JSON.stringify(calledNumbers));
 }
 
-async function loadCalledNumbers() {
-    const snapshot = await firebase.database().ref("calledNumbers").once("value");
-    const data = snapshot.val();
-    calledNumbers = data || {};
-    clinics.forEach(c => {
-        if (!Array.isArray(calledNumbers[c.name])) calledNumbers[c.name] = [];
-    });
-
+function loadCalledNumbers() {
     const data = localStorage.getItem("calledNumbers");
     if (data) calledNumbers = JSON.parse(data);
     clinics.forEach(c => {
@@ -202,8 +176,8 @@ function addClinic() {
     calledNumbers[name] = [];
     calledHistory[name] = [];
 
-    await saveClinics();
-    await saveCalledNumbers();
+    saveClinics();
+    saveCalledNumbers();
     saveCalledHistory();
 
     // Xoá nội dung input
@@ -241,8 +215,8 @@ function saveChanges() {
         clinics[index].limit = newLimit;
     });
 
-    await saveClinics();
-    await saveCalledNumbers();
+    saveClinics();
+    saveCalledNumbers();
     saveCalledHistory();
     alert("Đã lưu thay đổi!");
     renderAdmin();
@@ -283,7 +257,7 @@ function renderPhatSo() {
     });
 }
 
-async function issueNumber(name, isPriority = false) {
+function issueNumber(name, isPriority = false) {
     loadCalledNumbers();
     const clinic = clinics.find(c => c.name === name);
     if (!clinic || clinic.issued >= clinic.limit) {
@@ -297,8 +271,8 @@ async function issueNumber(name, isPriority = false) {
     const displayNumber = isPriority ? `A${number.toString().padStart(2, "0")}` : number;
 
     calledNumbers[clinic.name].push(displayNumber);
-    await saveClinics();
-    await saveCalledNumbers();
+    saveClinics();
+    saveCalledNumbers();
     renderPhatSo();
     handlePrint(clinic.name, displayNumber, isPriority);
 }
