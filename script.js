@@ -122,22 +122,21 @@ function showDashboard(user) {
         document.getElementById("phatso-container").style.display = "block";
         renderPhatSo();
     } else if (user.role === "phongkham") {
-        const savedClinic = localStorage.getItem("selectedClinic");
-if (savedClinic) {
-    selectedClinic = savedClinic;
-    document.getElementById("clinic-name-display").innerText = selectedClinic;
-    document.getElementById("clinic-name-display").style.display = "block";
-    document.getElementById("clinic-select-container").style.display = "none";
-    document.getElementById("phongkham-action").style.display = "block";
-    document.getElementById("main-heading").innerText = "GỌI BỆNH NHÂN VÀO PHÒNG KHÁM!";
-    document.getElementById("top-right-buttons").style.display = "block";
-    updateCalledList();
-} else {
-    showClinicSelect();
-}
-        document.getElementById("phongkham-container").style.display = "block";
-        showClinicSelect();
+    const savedClinic = localStorage.getItem("selectedClinic");
+    if (savedClinic) {
+        selectedClinic = savedClinic;
+        document.getElementById("clinic-name-display").innerText = selectedClinic;
+        document.getElementById("clinic-name-display").style.display = "block";
+        document.getElementById("clinic-select-container").style.display = "none";
+        document.getElementById("phongkham-action").style.display = "block";
+        document.getElementById("main-heading").innerText = "GỌI BỆNH NHÂN VÀO PHÒNG KHÁM!";
+        document.getElementById("top-right-buttons").style.display = "block";
+        updateCalledList();
+    } else {
+        showClinicSelect(); // ✅ Chỉ gọi khi chưa có selectedClinic
     }
+    document.getElementById("phongkham-container").style.display = "block";
+}
 }
 
 function renderAdmin() {
@@ -400,6 +399,7 @@ function confirmClinic() {
     }
 
     if (nameText) nameText.innerText = selectedClinic;
+    if (nameDisplay) nameDisplay.innerText = selectedClinic;
     if (nameDisplay) nameDisplay.style.display = "block";
 
     const selectContainer = document.getElementById("clinic-select-container");
